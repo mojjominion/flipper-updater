@@ -1,0 +1,52 @@
+#!bin/bash
+file_name="Flipper-linux.zip"
+dir_name="Flipper-linux"
+home_dir="${HOME}"
+
+
+new_version=$(curl --silent "https://api.github.com/repos/facebook/flipper/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
+echo "$new_version"
+
+
+echo "https://github.com/facebook/flipper/releases/download/${new_version}/${file_name}"
+
+download(){
+	if curl -# -o "${home_dir}/${file_name}" -L "https://github.com/facebook/flipper/releases/download/${new_version}/${file_name}"; then
+		unzip -o ${file_name} -d "${home_dir}/${dir_name}" | pv -l >/dev/null
+	else 
+		echo "Something went wrong"
+	fi
+}
+
+clean_zip() {
+	if [[ -f "${file_name}" ]]; then
+		echo "cleaning file: ${file_name}"
+		rm -r ${file_name}
+	fi
+}
+
+clear_dir(){
+	if [[ -d "${dir_name}" ]]; then
+		echo "cleaning dir ${dir_name}"
+		rm -r ${dir_name}
+	fi
+}
+
+clean_both(){
+	#clean_zip
+	clear_dir
+}
+
+update() {
+	clean_both
+	download
+	clean_zip
+}
+
+echo "Do you wish to install this program?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) update; break;;
+        No ) exit;;
+    esac
+done
